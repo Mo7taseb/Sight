@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="SIGHT — AI-powered accessibility assistant for blind users. A Software Engineering graduation project.">
+<meta name="theme-color" content="#0a0a0c">
+<title>SIGHT — AI-Powered Accessibility Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0a0c;
+    --bg-soft:#101015;
+    --panel:#141419;
+    --panel-2:#1a1a21;
+    --line:#26262f;
+    --text:#f4f4f6;
+    --text-dim:#9a9aa6;
+    --text-mute:#62626e;
+    --accent:#3d8bff;
+    --accent-soft:#69a8ff;
+    --accent-glow:rgba(61,139,255,0.45);
+    --white:#ffffff;
+    --radius:20px;
+    --radius-sm:14px;
+    --font-display:'Sora',sans-serif;
+    --font-body:'Schibsted Grotesk',sans-serif;
+    --maxw:1180px;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    font-size:17px;
+    line-height:1.65;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;text-decoration:none}
+  img{max-width:100%;display:block}
+  ::selection{background:var(--accent);color:#fff}
+
+  /* focus visibility for accessibility */
+  a:focus-visible,button:focus-visible{
+    outline:3px solid var(--accent-soft);
+    outline-offset:3px;
+    border-radius:6px;
+  }
+
+  .skip-link{
+    position:absolute;left:-999px;top:0;z-index:200;
+    background:var(--accent);color:#fff;padding:12px 20px;
+    border-radius:0 0 10px 0;font-weight:600;
+  }
+  .skip-link:focus{left:0}
+
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 26px}
+
+  /* ---------- background atmosphere ---------- */
+  .bg-fx{position:fixed;inset:0;z-index:-1;overflow:hidden}
+  .bg-fx::before{
+    content:"";position:absolute;width:680px;height:680px;
+    top:-260px;left:-180px;border-radius:50%;
+    background:radial-gradient(circle,rgba(61,139,255,0.18),transparent 65%);
+    filter:blur(20px);
+  }
+  .bg-fx::after{
+    content:"";position:absolute;width:560px;height:560px;
+    bottom:-220px;right:-160px;border-radius:50%;
+    background:radial-gradient(circle,rgba(61,139,255,0.10),transparent 65%);
+    filter:blur(20px);
+  }
+  .grid-overlay{
+    position:fixed;inset:0;z-index:-1;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse at 50% 0%,#000 25%,transparent 78%);
+    -webkit-mask-image:radial-gradient(ellipse at 50% 0%,#000 25%,transparent 78%);
+  }
+
+  /* ---------- nav ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:100;
+    backdrop-filter:blur(14px);
+    background:rgba(10,10,12,0.72);
+    border-bottom:1px solid transparent;
+    transition:border-color .3s ease,background .3s ease;
+  }
+  header.scrolled{border-bottom-color:var(--line)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:70px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:800;font-size:1.25rem;letter-spacing:.14em}
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 14px var(--accent-glow);
+  }
+  .nav-links{display:flex;gap:30px;align-items:center}
+  .nav-links a{font-size:.92rem;color:var(--text-dim);font-weight:500;transition:color .2s}
+  .nav-links a:hover{color:var(--text)}
+  .nav-cta{
+    background:var(--accent);color:#fff;padding:9px 18px;border-radius:10px;
+    font-weight:600;font-size:.9rem;transition:transform .2s,box-shadow .2s;
+  }
+  .nav-cta:hover{transform:translateY(-2px);box-shadow:0 8px 24px var(--accent-glow)}
+  .menu-btn{display:none;background:none;border:none;color:var(--text);cursor:pointer;padding:8px}
+  .menu-btn svg{width:26px;height:26px}
+
+  /* ---------- reveal animation ---------- */
+  .reveal{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ---------- section base ---------- */
+  section{padding:110px 0;position:relative}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--font-display);font-size:.78rem;font-weight:600;
+    letter-spacing:.22em;text-transform:uppercase;color:var(--accent-soft);
+    margin-bottom:18px;
+  }
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--accent)}
+  h2.sec-title{
+    font-family:var(--font-display);font-weight:700;
+    font-size:clamp(2rem,4.4vw,3rem);line-height:1.1;letter-spacing:-.02em;
+    margin-bottom:18px;
+  }
+  .sec-intro{color:var(--text-dim);max-width:620px;font-size:1.05rem}
+
+  /* ---------- hero ---------- */
+  .hero{
+    min-height:100vh;display:flex;align-items:center;
+    padding-top:120px;padding-bottom:80px;
+  }
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:60px;align-items:center;width:100%}
+  .hero-tag{
+    display:inline-flex;align-items:center;gap:9px;
+    background:var(--panel);border:1px solid var(--line);
+    padding:8px 16px;border-radius:100px;font-size:.84rem;color:var(--text-dim);
+    margin-bottom:28px;
+  }
+  .hero-tag .pulse{
+    width:8px;height:8px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 0 0 var(--accent-glow);animation:pulse 2.4s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 var(--accent-glow)}
+    70%{box-shadow:0 0 0 12px rgba(61,139,255,0)}
+    100%{box-shadow:0 0 0 0 rgba(61,139,255,0)}
+  }
+  .hero h1{
+    font-family:var(--font-display);font-weight:800;
+    font-size:clamp(3.6rem,11vw,7.4rem);line-height:.95;letter-spacing:-.04em;
+    margin-bottom:22px;
+    background:linear-gradient(180deg,#ffffff 30%,#8f9fb8 130%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    position:relative;
+  }
+  .hero h1 .ring{
+    position:absolute;right:-6px;top:8px;width:.5em;height:.5em;
+    border:3px solid var(--accent);border-radius:50%;
+    box-shadow:0 0 26px var(--accent-glow);
+    display:inline-block;
+  }
+  .hero-line{
+    font-size:clamp(1.15rem,2.4vw,1.5rem);font-weight:600;
+    color:var(--text);margin-bottom:18px;font-family:var(--font-display);
+  }
+  .hero-line .hl{color:var(--accent-soft)}
+  .hero p.lede{color:var(--text-dim);max-width:480px;margin-bottom:34px}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family:var(--font-display);font-weight:600;font-size:.98rem;
+    padding:15px 26px;border-radius:13px;cursor:pointer;border:none;
+    transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;
+  }
+  .btn-primary{background:var(--accent);color:#fff;box-shadow:0 10px 30px -8px var(--accent-glow)}
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 16px 40px -8px var(--accent-glow)}
+  .btn-ghost{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+  .btn-ghost:hover{transform:translateY(-3px);border-color:var(--accent);color:#fff}
+  .btn svg{width:18px;height:18px}
+
+  /* hero visual */
+  .hero-visual{position:relative;display:flex;justify-content:center}
+  .scanner{
+    width:300px;height:300px;border-radius:34px;position:relative;
+    background:
+      radial-gradient(circle at 50% 40%,rgba(61,139,255,0.16),transparent 60%),
+      var(--panel);
+    border:1px solid var(--line);
+    box-shadow:0 30px 70px -20px rgba(0,0,0,.7),inset 0 0 60px rgba(61,139,255,0.05);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .scanner::before{
+    content:"";position:absolute;left:0;right:0;height:2px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);
+    box-shadow:0 0 18px var(--accent);
+    animation:scan 3.4s ease-in-out infinite;
+  }
+  @keyframes scan{
+    0%,100%{top:14%}
+    50%{top:84%}
+  }
+  .eye-core{
+    width:130px;height:130px;border-radius:50%;
+    border:2px solid rgba(61,139,255,0.4);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .eye-core::before,.eye-core::after{
+    content:"";position:absolute;border:1px solid rgba(61,139,255,0.22);border-radius:50%;
+  }
+  .eye-core::before{width:170px;height:170px;animation:spin 14s linear infinite}
+  .eye-core::after{width:212px;height:212px;animation:spin 22s linear infinite reverse}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .pupil{
+    width:54px;height:54px;border-radius:50%;background:var(--accent);
+    box-shadow:0 0 40px var(--accent-glow),inset 0 0 20px rgba(255,255,255,.4);
+  }
+  .corner{position:absolute;width:26px;height:26px;border:2px solid var(--accent-soft);opacity:.7}
+  .corner.tl{top:22px;left:22px;border-right:none;border-bottom:none;border-radius:6px 0 0 0}
+  .corner.tr{top:22px;right:22px;border-left:none;border-bottom:none;border-radius:0 6px 0 0}
+  .corner.bl{bottom:22px;left:22px;border-right:none;border-top:none;border-radius:0 0 0 6px}
+  .corner.br{bottom:22px;right:22px;border-left:none;border-top:none;border-radius:0 0 6px 0}
+  .float-chip{
+    position:absolute;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:12px;padding:10px 14px;font-size:.8rem;font-weight:600;
+    display:flex;align-items:center;gap:8px;
+    box-shadow:0 14px 30px -12px rgba(0,0,0,.7);
+  }
+  .float-chip .ic{width:9px;height:9px;border-radius:50%;background:var(--accent)}
+  .chip-1{top:6%;left:-30px;animation:bob 4.5s ease-in-out infinite}
+  .chip-2{bottom:14%;right:-38px;animation:bob 5.2s ease-in-out infinite .6s}
+  @keyframes bob{50%{transform:translateY(-12px)}}
+
+  /* ---------- stats strip ---------- */
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:60px}
+  .stat{background:var(--bg-soft);padding:30px 26px;text-align:center}
+  .stat .num{font-family:var(--font-display);font-weight:800;font-size:2rem;color:var(--white)}
+  .stat .lbl{color:var(--text-mute);font-size:.86rem;margin-top:4px}
+
+  /* ---------- about ---------- */
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:50px;align-items:center}
+  .about-points{display:flex;flex-direction:column;gap:14px;margin-top:8px}
+  .point{
+    display:flex;gap:14px;align-items:flex-start;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius-sm);padding:16px 18px;
+    transition:border-color .25s,transform .25s;
+  }
+  .point:hover{border-color:var(--accent);transform:translateX(6px)}
+  .point .tick{
+    flex-shrink:0;width:30px;height:30px;border-radius:9px;
+    background:rgba(61,139,255,0.12);border:1px solid rgba(61,139,255,0.3);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .point .tick svg{width:15px;height:15px;stroke:var(--accent-soft)}
+  .point span{font-size:.98rem;color:var(--text)}
+  .offline-card{
+    background:linear-gradient(160deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);border-radius:var(--radius);padding:34px;
+    position:relative;overflow:hidden;
+  }
+  .offline-card::before{
+    content:"";position:absolute;top:-60px;right:-60px;width:200px;height:200px;
+    background:radial-gradient(circle,var(--accent-glow),transparent 70%);
+    opacity:.4;
+  }
+  .offline-badge{
+    display:inline-flex;align-items:center;gap:8px;font-family:var(--font-display);
+    font-weight:700;font-size:.8rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-soft);margin-bottom:18px;
+  }
+  .offline-card h3{font-family:var(--font-display);font-size:1.5rem;margin-bottom:12px;letter-spacing:-.01em}
+  .offline-card p{color:var(--text-dim);font-size:.98rem}
+
+  /* ---------- features ---------- */
+  .feat-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:54px;
+  }
+  .feat{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:26px 22px;
+    transition:transform .3s ease,border-color .3s ease,background .3s ease;
+    position:relative;overflow:hidden;
+  }
+  .feat::after{
+    content:"";position:absolute;inset:0;border-radius:var(--radius);
+    background:radial-gradient(circle at 50% 0%,rgba(61,139,255,0.10),transparent 60%);
+    opacity:0;transition:opacity .3s;
+  }
+  .feat:hover{transform:translateY(-7px);border-color:rgba(61,139,255,0.5)}
+  .feat:hover::after{opacity:1}
+  .feat-icon{
+    width:48px;height:48px;border-radius:12px;
+    background:rgba(61,139,255,0.1);border:1px solid rgba(61,139,255,0.25);
+    display:flex;align-items:center;justify-content:center;margin-bottom:18px;
+  }
+  .feat-icon svg{width:24px;height:24px;stroke:var(--accent-soft);fill:none;stroke-width:1.8}
+  .feat h3{font-family:var(--font-display);font-size:1.08rem;margin-bottom:7px;letter-spacing:-.01em}
+  .feat p{color:var(--text-dim);font-size:.9rem;line-height:1.55}
+  .feat.span2{grid-column:span 2;display:flex;flex-direction:column;justify-content:center;
+    background:linear-gradient(150deg,rgba(61,139,255,0.12),var(--panel))}
+
+  /* ---------- architecture ---------- */
+  .flow{
+    display:flex;flex-direction:column;align-items:center;gap:0;margin-top:54px;
+  }
+  .flow-node{
+    width:100%;max-width:560px;
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:24px 28px;
+    display:flex;align-items:center;gap:20px;
+    position:relative;transition:border-color .3s,transform .3s;
+  }
+  .flow-node:hover{border-color:var(--accent);transform:scale(1.02)}
+  .flow-node .step{
+    font-family:var(--font-display);font-weight:800;font-size:1.3rem;
+    color:var(--accent);width:40px;flex-shrink:0;
+  }
+  .flow-node .fn-icon{
+    width:46px;height:46px;border-radius:12px;flex-shrink:0;
+    background:rgba(61,139,255,0.1);border:1px solid rgba(61,139,255,0.25);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .flow-node .fn-icon svg{width:23px;height:23px;stroke:var(--accent-soft);fill:none;stroke-width:1.8}
+  .flow-node h4{font-family:var(--font-display);font-size:1.08rem;margin-bottom:3px}
+  .flow-node p{color:var(--text-dim);font-size:.88rem}
+  .flow-arrow{
+    width:2px;height:38px;
+    background:linear-gradient(180deg,var(--accent),rgba(61,139,255,0.1));
+    position:relative;
+  }
+  .flow-arrow::after{
+    content:"";position:absolute;bottom:0;left:50%;transform:translateX(-50%);
+    border-left:6px solid transparent;border-right:6px solid transparent;
+    border-top:8px solid var(--accent);
+  }
+  .flow-node.cloud{background:linear-gradient(150deg,rgba(61,139,255,0.14),var(--panel))}
+
+  /* ---------- tech ---------- */
+  .tech-grid{
+    display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:54px;
+  }
+  .tech{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius-sm);padding:22px 18px;text-align:center;
+    transition:transform .25s,border-color .25s,background .25s;
+  }
+  .tech:hover{transform:translateY(-5px);border-color:var(--accent);background:var(--panel-2)}
+  .tech .tname{font-family:var(--font-display);font-weight:600;font-size:1rem}
+  .tech .tcat{color:var(--text-mute);font-size:.78rem;margin-top:3px}
+  .tech .tdot{
+    width:8px;height:8px;border-radius:50%;background:var(--accent);
+    margin:0 auto 12px;box-shadow:0 0 12px var(--accent-glow);
+  }
+
+  /* ---------- demos ---------- */
+  .demo-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-top:54px}
+  .demo{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);overflow:hidden;
+    transition:transform .3s,border-color .3s;
+  }
+  .demo:hover{transform:translateY(-6px);border-color:rgba(61,139,255,0.5)}
+  .demo-thumb{
+    aspect-ratio:16/9;
+    background:
+      radial-gradient(circle at 50% 50%,rgba(61,139,255,0.16),transparent 60%),
+      var(--panel-2);
+    display:flex;align-items:center;justify-content:center;
+    border-bottom:1px solid var(--line);position:relative;
+  }
+  .play-btn{
+    width:62px;height:62px;border-radius:50%;
+    background:var(--accent);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 0 var(--accent-glow);animation:pulse 2.6s infinite;
+    transition:transform .25s;
+  }
+  .demo:hover .play-btn{transform:scale(1.12)}
+  .play-btn svg{width:24px;height:24px;fill:#fff;margin-left:3px}
+  .demo-meta{padding:20px 22px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .demo-meta h4{font-family:var(--font-display);font-size:1.05rem}
+  .demo-meta p{color:var(--text-mute);font-size:.84rem;margin-top:2px}
+  .demo-tag{
+    font-size:.74rem;font-family:var(--font-display);font-weight:600;
+    color:var(--accent-soft);border:1px solid rgba(61,139,255,0.3);
+    padding:5px 11px;border-radius:100px;white-space:nowrap;
+  }
+
+  /* ---------- team ---------- */
+  .team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:54px}
+  /* on wide screens Momen (1st in DOM) moves to the center column */
+  .team-grid .member:nth-child(1){order:2}
+  .team-grid .member:nth-child(2){order:1}
+  .team-grid .member:nth-child(3){order:3}
+  .member{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:32px 26px;text-align:center;
+    transition:transform .3s,border-color .3s;
+  }
+  .member:hover{transform:translateY(-7px);border-color:rgba(61,139,255,0.5)}
+  .avatar{
+    width:84px;height:84px;border-radius:50%;margin:0 auto 18px;
+    background:linear-gradient(150deg,var(--accent),#1d4f99);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:800;font-size:1.6rem;color:#fff;
+    box-shadow:0 0 30px -6px var(--accent-glow);
+    border:2px solid rgba(255,255,255,0.08);
+  }
+  .member h3{font-family:var(--font-display);font-size:1.12rem;margin-bottom:4px}
+  .member .role{color:var(--accent-soft);font-size:.85rem;font-weight:500}
+  .member .role-sub{color:var(--text-mute);font-size:.82rem;margin-top:8px}
+  .member-link{
+    display:inline-flex;align-items:center;gap:8px;margin-top:18px;
+    font-family:var(--font-display);font-weight:600;font-size:.86rem;
+    color:var(--text-dim);background:var(--panel-2);border:1px solid var(--line);
+    padding:9px 16px;border-radius:10px;transition:color .2s,border-color .2s,transform .2s;
+  }
+  .member-link svg{width:16px;height:16px;stroke:var(--accent-soft);fill:none;stroke-width:1.8}
+  .member-link:hover{color:#fff;border-color:var(--accent);transform:translateY(-2px)}
+
+  /* ---------- single demo ---------- */
+  .demo-single{display:block;max-width:760px;margin:54px auto 0}
+  .demo-single:hover{transform:none}
+  .demo-frame{
+    aspect-ratio:16/9;background:var(--panel-2);
+    border-bottom:1px solid var(--line);
+  }
+  .demo-frame iframe{width:100%;height:100%;border:0;display:block}
+
+  /* ---------- download ---------- */
+  .download-card{
+    background:linear-gradient(160deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:60px 40px;text-align:center;position:relative;overflow:hidden;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .download-card::before{
+    content:"";position:absolute;top:-90px;left:50%;transform:translateX(-50%);
+    width:340px;height:340px;
+    background:radial-gradient(circle,var(--accent-glow),transparent 70%);
+    opacity:.35;
+  }
+  .download-card>*{position:relative}
+  .download-btn{font-size:1.05rem;padding:17px 34px}
+  .download-note{color:var(--text-mute);font-size:.86rem;margin-top:18px}
+
+  /* ---------- footer ---------- */
+  footer{
+    border-top:1px solid var(--line);padding:50px 0 40px;
+    background:var(--bg-soft);
+  }
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .foot .brand{font-size:1.1rem}
+  .foot p{color:var(--text-mute);font-size:.88rem}
+  .foot .copy{font-family:var(--font-display);font-weight:600;color:var(--text-dim)}
+
+  /* ---------- responsive ---------- */
+  @media(max-width:980px){
+    .hero-grid{grid-template-columns:1fr;gap:50px;text-align:center}
+    .hero-tag,.hero-actions{justify-content:center}
+    .hero p.lede{margin-left:auto;margin-right:auto}
+    .hero h1 .ring{display:none}
+    .about-grid{grid-template-columns:1fr;gap:36px}
+    .feat-grid{grid-template-columns:repeat(2,1fr)}
+    .feat.span2{grid-column:span 2}
+    .tech-grid{grid-template-columns:repeat(3,1fr)}
+    .team-grid{grid-template-columns:1fr}
+    /* single column: keep natural DOM order so Momen is first */
+    .team-grid .member:nth-child(1),
+    .team-grid .member:nth-child(2),
+    .team-grid .member:nth-child(3){order:0}
+  }
+  @media(max-width:680px){
+    body{font-size:16px}
+    section{padding:80px 0}
+    .nav-links{
+      position:fixed;top:70px;left:0;right:0;
+      flex-direction:column;gap:0;
+      background:rgba(10,10,12,0.97);backdrop-filter:blur(14px);
+      border-bottom:1px solid var(--line);
+      padding:10px 0;
+      transform:translateY(-130%);transition:transform .35s ease;
+    }
+    .nav-links.open{transform:translateY(0)}
+    .nav-links a{padding:14px 26px;width:100%;font-size:1rem}
+    .nav-links .nav-cta{margin:10px 26px;text-align:center}
+    .menu-btn{display:block}
+    .stats{grid-template-columns:1fr}
+    .feat-grid{grid-template-columns:1fr}
+    .feat.span2{grid-column:span 1}
+    .tech-grid{grid-template-columns:repeat(2,1fr)}
+    .scanner{width:250px;height:250px}
+    .float-chip{display:none}
+    .flow-node{flex-wrap:wrap;gap:14px;padding:20px}
+    .hero-actions .btn{flex:1;justify-content:center}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.001s!important;transition-duration:.001s!important}
+    html{scroll-behavior:auto}
+    .reveal{opacity:1;transform:none}
+  }
+</style>
+</head>
+<body>
+
+<a class="skip-link" href="#about">Skip to main content</a>
+<div class="bg-fx" aria-hidden="true"></div>
+<div class="grid-overlay" aria-hidden="true"></div>
+
+<!-- ======== NAV ======== -->
+<header id="header">
+  <div class="wrap nav">
+    <a class="brand" href="#home" aria-label="SIGHT home">
+      <span class="dot" aria-hidden="true"></span>SIGHT
+    </a>
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="#about">About</a>
+      <a href="#features">Features</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#tech">Tech</a>
+      <a href="#team">Team</a>
+    </nav>
+    <button class="menu-btn" id="menuBtn" aria-label="Toggle navigation menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main>
+<!-- ======== HERO ======== -->
+<section class="hero" id="home">
+  <div class="wrap hero-grid">
+    <div class="hero-text">
+      <span class="hero-tag reveal"><span class="pulse" aria-hidden="true"></span> Offline-first · On-device AI</span>
+      <h1 class="reveal">SIGHT<span class="ring" aria-hidden="true"></span></h1>
+      <p class="hero-line reveal">AI-powered <span class="hl">accessibility assistant</span> for blind users</p>
+      <p class="lede reveal">An Android assistant that helps blind and low-vision users understand and navigate their surroundings — independently, and without needing a connection.</p>
+      <div class="hero-actions reveal">
+        <a class="btn btn-primary" href="#demos">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Watch Demo
+        </a>
+        <a class="btn btn-ghost" href="#features">Explore Features</a>
+      </div>
+    </div>
+    <div class="hero-visual reveal" aria-hidden="true">
+      <div class="scanner">
+        <span class="corner tl"></span><span class="corner tr"></span>
+        <span class="corner bl"></span><span class="corner br"></span>
+        <div class="eye-core"><div class="pupil"></div></div>
+      </div>
+      <div class="float-chip chip-1"><span class="ic"></span>Detecting text…</div>
+      <div class="float-chip chip-2"><span class="ic"></span>Voice feedback ready</div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== ABOUT ======== -->
+<section id="about">
+  <div class="wrap">
+    <div class="about-grid">
+      <div class="reveal">
+        <span class="eyebrow">About the Project</span>
+        <h2 class="sec-title">Independence,<br>powered by AI.</h2>
+        <p class="sec-intro">SIGHT acts as a second pair of eyes — translating the visual world into clear voice guidance, in real time. It is designed around one goal: giving blind users the confidence to act on their own.</p>
+        <div class="about-points">
+          <div class="point"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>Identify banknotes instantly to handle money safely</span></div>
+          <div class="point"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>Recognize familiar faces of friends and family</span></div>
+          <div class="point"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>Read printed text aloud from any document or label</span></div>
+          <div class="point"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>Detect obstacles on the path to move around safely</span></div>
+          <div class="point"><span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span><span>Ask open questions about surroundings using AI</span></div>
+        </div>
+      </div>
+      <div class="offline-card reveal">
+        <span class="offline-badge">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          Offline-First Design
+        </span>
+        <h3>Works without internet.</h3>
+        <p>Core accessibility features — currency detection, text reading, face recognition and obstacle detection — run entirely on the device. SIGHT keeps working in areas with weak or no connection, where users need it the most. Cloud intelligence is used only to extend capability, never as a requirement.</p>
+      </div>
+    </div>
+
+    <div class="stats reveal">
+      <div class="stat"><div class="num">7</div><div class="lbl">Accessibility features</div></div>
+      <div class="stat"><div class="num">100%</div><div class="lbl">Voice-driven interaction</div></div>
+      <div class="stat"><div class="num">On-device</div><div class="lbl">AI processing</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== FEATURES ======== -->
+<section id="features">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Capabilities</span>
+      <h2 class="sec-title">Seven ways SIGHT helps.</h2>
+      <p class="sec-intro">Every feature is built to be triggered hands-free and to respond with clear, natural speech.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat reveal">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div>
+        <h3>Face Recognition</h3>
+        <p>Identifies saved friends and family by name.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/></svg></div>
+        <h3>Currency Detection</h3>
+        <p>Recognizes banknote values to handle cash safely.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 11h5"/></svg></div>
+        <h3>OCR Reading</h3>
+        <p>Reads printed text aloud from documents and labels.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg></div>
+        <h3>Voice Commands</h3>
+        <p>Fully hands-free control through natural speech.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>Obstacle Detection</h3>
+        <p>Warns about objects on the path ahead in real time.</p>
+      </div>
+      <div class="feat reveal">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="12" cy="10" r="2"/></svg></div>
+        <h3>Ask About Image</h3>
+        <p>Answers open questions about the scene using AI.</p>
+      </div>
+      <div class="feat reveal span2">
+        <div class="feat-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <h3>SOS Assistance</h3>
+        <p>An emergency action that alerts a trusted contact with the user's situation — one voice command away when help is needed urgently.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== ARCHITECTURE ======== -->
+<section id="architecture">
+  <div class="wrap">
+    <div class="reveal" style="text-align:center;display:flex;flex-direction:column;align-items:center">
+      <span class="eyebrow">How It Works</span>
+      <h2 class="sec-title">From camera to clear guidance.</h2>
+      <p class="sec-intro" style="text-align:center">A layered pipeline keeps responses fast and private — most processing never leaves the phone.</p>
+    </div>
+    <div class="flow">
+      <div class="flow-node reveal">
+        <span class="step">01</span>
+        <span class="fn-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>
+        <div><h4>Camera / Voice Input</h4><p>The user triggers SIGHT by voice and points the camera.</p></div>
+      </div>
+      <div class="flow-arrow reveal" aria-hidden="true"></div>
+      <div class="flow-node reveal">
+        <span class="step">02</span>
+        <span class="fn-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3"/></svg></span>
+        <div><h4>On-Device AI Processing</h4><p>TensorFlow Lite & MediaPipe run detection locally — fast and offline.</p></div>
+      </div>
+      <div class="flow-arrow reveal" aria-hidden="true"></div>
+      <div class="flow-node cloud reveal">
+        <span class="step">03</span>
+        <span class="fn-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></span>
+        <div><h4>Gemini Cloud AI</h4><p>Optional cloud layer for complex reasoning about a scene.</p></div>
+      </div>
+      <div class="flow-arrow reveal" aria-hidden="true"></div>
+      <div class="flow-node reveal">
+        <span class="step">04</span>
+        <span class="fn-icon"><svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg></span>
+        <div><h4>Voice Feedback to User</h4><p>Results are spoken back in clear, natural language.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== TECH ======== -->
+<section id="tech">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">Technologies</span>
+      <h2 class="sec-title">Built on a modern stack.</h2>
+      <p class="sec-intro">A native Android foundation combined with on-device machine learning and secure local storage.</p>
+    </div>
+    <div class="tech-grid">
+      <div class="tech reveal"><div class="tdot" aria-hidden="true"></div><div class="tname">Kotlin</div><div class="tcat">Core Language</div></div>
+      <div class="tech reveal"><div class="tdot" aria-hidden="true"></div><div class="tname">Jetpack Compose</div><div class="tcat">UI Toolkit</div></div>
+      <div class="tech reveal"><div class="tdot" aria-hidden="true"></div><div class="tname">TensorFlow Lite</div><div class="tcat">On-Device ML</div></div>
+      <div class="tech reveal"><div class="tdot" aria-hidden="true"></div><div class="tname">MediaPipe</div><div class="tcat">Vision Pipeline</div></div>
+      <div class="tech reveal"><div class="tdot" aria-hidden="true"></div><div class="tname">Gemini</div><div class="tcat">Cloud AI</div></div>
+      <div class="tech reveal"><div class="tdot" aria-hidden="true"></div><div class="tname">CameraX</div><div class="tcat">Camera API</div></div>
+      <div class="tech reveal"><div class="tdot" aria-hidden="true"></div><div class="tname">SQLCipher</div><div class="tcat">Encrypted Storage</div></div>
+      <div class="tech reveal"><div class="tdot" aria-hidden="true"></div><div class="tname">Room Database</div><div class="tcat">Local Persistence</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== DEMOS ======== -->
+<section id="demos">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">See It In Action</span>
+      <h2 class="sec-title">Demo video.</h2>
+      <p class="sec-intro">A full walkthrough of SIGHT's features in real use — currency, faces, text, and more.</p>
+    </div>
+    <div class="demo demo-single reveal">
+      <div class="demo-frame">
+        <iframe src="https://drive.google.com/file/d/1gkf7xvD0y_uH_YgnCydFNNEHc2-86doe/preview"
+                title="SIGHT — Full Feature Demo video"
+                allow="autoplay; encrypted-media; fullscreen"
+                allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="demo-meta"><div><h4>SIGHT — Full Feature Demo</h4><p>All accessibility features in one walkthrough</p></div><span class="demo-tag">Demo</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== TEAM ======== -->
+<section id="team">
+  <div class="wrap">
+    <div class="reveal">
+      <span class="eyebrow">The Team</span>
+      <h2 class="sec-title">Built by three engineers.</h2>
+      <p class="sec-intro">A Software Engineering graduation project, designed and developed together.</p>
+    </div>
+    <div class="team-grid">
+      <div class="member reveal">
+        <div class="avatar" aria-hidden="true">MA</div>
+        <h3>Momen Almohtaseb</h3>
+        <div class="role">Software Engineer</div>
+        <div class="role-sub">SIGHT Project Team</div>
+        <a class="member-link" href="https://www.linkedin.com/in/momenalmohtaseb/" target="_blank" rel="noopener" aria-label="Momen Almohtaseb on LinkedIn">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a>
+      </div>
+      <div class="member reveal">
+        <div class="avatar" aria-hidden="true">TF</div>
+        <h3>Tala Faraj</h3>
+        <div class="role">Software Engineer</div>
+        <div class="role-sub">SIGHT Project Team</div>
+        <a class="member-link" href="https://www.linkedin.com/in/tala--faraj/" target="_blank" rel="noopener" aria-label="Tala Faraj on LinkedIn">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a>
+      </div>
+      <div class="member reveal">
+        <div class="avatar" aria-hidden="true">KA</div>
+        <h3>Kareem Abu Ayyash</h3>
+        <div class="role">Software Engineer</div>
+        <div class="role-sub">SIGHT Project Team</div>
+        <a class="member-link" href="https://www.linkedin.com/in/kareem-abuayash11/" target="_blank" rel="noopener" aria-label="Kareem Abu Ayyash on LinkedIn">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== DOWNLOAD ======== -->
+<section id="download">
+  <div class="wrap">
+    <div class="download-card reveal">
+      <span class="eyebrow">Get The App</span>
+      <h2 class="sec-title">Download SIGHT.</h2>
+      <p class="sec-intro" style="margin:0 auto 30px">Install the app on your Android device and try every accessibility feature for yourself.</p>
+      <a class="btn btn-primary download-btn" href="https://drive.google.com/uc?export=download&id=1mjoQI0RqAsw2BSy_cZUrWbPXYeLyebzT" target="_blank" rel="noopener" aria-label="Download the SIGHT APK">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download APK
+      </a>
+      <p class="download-note">Android 8.0 and above &middot; Free</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<!-- ======== FOOTER ======== -->
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#home"><span class="dot" aria-hidden="true"></span>SIGHT</a>
+    <p class="copy">SIGHT — Graduation Project 2026</p>
+    <p>AI-powered accessibility for everyone.</p>
+  </div>
+</footer>
+
+<script>
+  // sticky header border
+  const header=document.getElementById('header');
+  window.addEventListener('scroll',()=>{
+    header.classList.toggle('scrolled',window.scrollY>10);
+  },{passive:true});
+
+  // mobile menu
+  const menuBtn=document.getElementById('menuBtn');
+  const navLinks=document.getElementById('navLinks');
+  menuBtn.addEventListener('click',()=>{
+    const open=navLinks.classList.toggle('open');
+    menuBtn.setAttribute('aria-expanded',open);
+  });
+  navLinks.querySelectorAll('a').forEach(a=>{
+    a.addEventListener('click',()=>{
+      navLinks.classList.remove('open');
+      menuBtn.setAttribute('aria-expanded','false');
+    });
+  });
+
+  // scroll reveal with stagger
+  const items=document.querySelectorAll('.reveal');
+  const io=new IntersectionObserver((entries)=>{
+    entries.forEach((e,i)=>{
+      if(e.isIntersecting){
+        const sibs=[...e.target.parentElement.children].filter(c=>c.classList.contains('reveal'));
+        const idx=sibs.indexOf(e.target);
+        e.target.style.transitionDelay=(Math.max(0,idx)*70)+'ms';
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0.12,rootMargin:'0px 0px -40px 0px'});
+  items.forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
