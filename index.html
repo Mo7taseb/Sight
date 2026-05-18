@@ -428,13 +428,19 @@
   .member-link:hover{color:#fff;border-color:var(--accent);transform:translateY(-2px)}
 
   /* ---------- single demo ---------- */
-  .demo-single{display:block;max-width:760px;margin:54px auto 0}
+  .demo-single{display:block;max-width:760px;margin:54px auto 0;width:100%}
   .demo-single:hover{transform:none}
   .demo-frame{
-    aspect-ratio:16/9;background:var(--panel-2);
-    border-bottom:1px solid var(--line);
+    position:relative;width:100%;padding-bottom:56.25%;height:0;
+    background:var(--panel-2);border-bottom:1px solid var(--line);overflow:hidden;
   }
-  .demo-frame iframe{width:100%;height:100%;border:0;display:block}
+  .demo-frame iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;display:block}
+  .demo-fallback{
+    display:none;text-align:center;padding:16px;
+  }
+  @media(max-width:680px){
+    .demo-fallback{display:block}
+  }
 
   /* ---------- download ---------- */
   .download-card{
@@ -721,6 +727,12 @@
                 allowfullscreen loading="lazy"></iframe>
       </div>
       <div class="demo-meta"><div><h4>SIGHT — Full Feature Demo</h4><p>All accessibility features in one walkthrough</p></div><span class="demo-tag">Demo</span></div>
+      <div class="demo-fallback">
+        <a class="btn btn-ghost" href="https://drive.google.com/file/d/1gkf7xvD0y_uH_YgnCydFNNEHc2-86doe/view" target="_blank" rel="noopener" aria-label="Watch demo on Google Drive">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Watch on Google Drive
+        </a>
+      </div>
     </div>
   </div>
 </section>
