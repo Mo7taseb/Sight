@@ -436,10 +436,20 @@
   }
   .demo-frame iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;display:block}
   .demo-fallback{
-    display:none;text-align:center;padding:16px;
+    display:none;padding:32px 24px;text-align:center;
+    flex-direction:column;align-items:center;gap:18px;
   }
+  .demo-fallback-icon{
+    width:72px;height:72px;border-radius:50%;
+    background:var(--accent);display:flex;align-items:center;justify-content:center;
+    box-shadow:0 0 0 0 var(--accent-glow);animation:pulse 2.6s infinite;
+  }
+  .demo-fallback-icon svg{width:28px;height:28px;fill:#fff;margin-left:4px}
+  .demo-fallback p{color:var(--text-dim);font-size:.92rem;max-width:260px}
+  .demo-fallback .btn{font-size:1rem;padding:14px 28px}
   @media(max-width:680px){
-    .demo-fallback{display:block}
+    .demo-frame{display:none}
+    .demo-fallback{display:flex}
   }
 
   /* ---------- download ---------- */
@@ -728,9 +738,13 @@
       </div>
       <div class="demo-meta"><div><h4>SIGHT — Full Feature Demo</h4><p>All accessibility features in one walkthrough</p></div><span class="demo-tag">Demo</span></div>
       <div class="demo-fallback">
-        <a class="btn btn-ghost" href="https://drive.google.com/file/d/1gkf7xvD0y_uH_YgnCydFNNEHc2-86doe/view" target="_blank" rel="noopener" aria-label="Watch demo on Google Drive">
+        <div class="demo-fallback-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        </div>
+        <p>Tap below to watch the full demo video in your browser or Google Drive app.</p>
+        <a class="btn btn-primary" href="https://drive.google.com/file/d/1gkf7xvD0y_uH_YgnCydFNNEHc2-86doe/view" target="_blank" rel="noopener" aria-label="Watch SIGHT demo on Google Drive">
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-          Watch on Google Drive
+          Watch Demo
         </a>
       </div>
     </div>
